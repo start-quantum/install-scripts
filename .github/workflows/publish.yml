@@ -26,6 +26,6 @@ jobs:
         with:
           name: install-quantum
           path: |
-            bin/Release/win10-x64/publish/install-quantum.exe
-            bin/Release/-x64/publish/install-quantum
-            bin/Release/linux-x64/publish/install-quantum
+            src/bin/Release/win10-x64/publish/install-quantum.exe
+            src/bin/Release/-x64/publish/install-quantum
+            src/bin/Release/linux-x64/publish/install-quantum
