@@ -1,0 +1,30 @@
+name: Publish self-contained installation programs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - with: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: true
+      - run: |
+          dotnet build -c Release --self-contained -r win10-x64
+          dotnet build -c Release --self-contained -r osx-x64
+          dotnet build -c Release --self-contained -r linux-x64
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-quantum
+          path: |
+            bin/Release/win10-x64/publish/install-quantum.exe
+            bin/Release/-x64/publish/install-quantum
+            bin/Release/linux-x64/publish/install-quantum
