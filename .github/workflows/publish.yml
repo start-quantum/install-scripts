@@ -21,6 +21,7 @@ jobs:
           dotnet build -c Release --self-contained -r win10-x64
           dotnet build -c Release --self-contained -r osx-x64
           dotnet build -c Release --self-contained -r linux-x64
+        working-directory: src
       - uses: actions/upload-artifact@v2
         with:
           name: install-quantum
