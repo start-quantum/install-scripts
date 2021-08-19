@@ -15,8 +15,7 @@ var conda = new Step(
             ).Result;
             System.Diagnostics.Process.Start(
                 condaInstaller,
-                "/InstallationType=JustMe",
-                "/S"
+                "/InstallationType=JustMe /S"
             ).WaitForExit();
         }
         else
