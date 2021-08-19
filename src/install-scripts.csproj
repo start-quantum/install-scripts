@@ -10,4 +10,8 @@
     <AssemblyName>install-quantum</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ShellProgressBar" Version="5.1.0" />
+  </ItemGroup>
+
 </Project>
