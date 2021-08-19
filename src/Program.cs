@@ -198,7 +198,7 @@ var vscode = new Step(
             Shell.WriteLineInColor($"Installing VS Code...", ConsoleColor.White);
             System.Diagnostics.Process.Start(
                 vscodeInstaller,
-                "/silent /norestart"
+                "/verysilent /norestart /mergetasks=!runcode"
             ).WaitForExit();
         }
         else
