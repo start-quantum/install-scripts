@@ -231,13 +231,14 @@ var vscodeExtensions = new[]
 
 new Step(
     "Common extensions for VS Code",
-    "TODO",
+    "Installs VS Code extensions for working with Python, Q#, and C#.",
     () =>
     {
         if (VSCode.TryFind(out var path))
         {
             foreach (var extId in vscodeExtensions)
             {
+                Console.WriteLine($"Installing extension {extId}...");
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = path,

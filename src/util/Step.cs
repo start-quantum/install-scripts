@@ -109,6 +109,7 @@ record Step(
             else
             {
                 Console.WriteLine();
+                Step.CompletedSteps.Add(this);
             }
         }
         else
