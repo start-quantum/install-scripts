@@ -17,6 +17,8 @@ record Step(
     List<Step>? DependsOn = null
 )
 {
+    public static List<Step> CompletedSteps = new ();
+
     private InstallStatus? installStatus = null;
     public InstallStatus InstallStatus
     {
@@ -24,7 +26,15 @@ record Step(
         {
             if (installStatus == null)
             {
-                installStatus = Check?.Invoke() ?? InstallStatus.Unknown;
+                try
+                {
+                    installStatus = Check?.Invoke() ?? InstallStatus.Unknown;
+                }
+                catch (Exception ex)
+                {
+                    Shell.WriteError($"Exception while checking if {Name} is installed:\n{ex}");
+                    installStatus = InstallStatus.Unknown;
+                }
             }
             return installStatus.Value;
         }
@@ -62,17 +72,29 @@ record Step(
                 {
                     Shell.WriteError($"Dependency {dependency.Name} not installed; skipping {Name}.");
                     Console.WriteLine();
+                    return;
                 }
             }
         }
 
-        if (Shell.Prompt($"Install {Name}?\n{Description}"))
+        if (Shell.Prompt($"Install {Name}?", Description))
         {
             var previousStatus = InstallStatus;
-            Install();
+            try
+            {
+                Install();
+            }
+            catch (Exception ex)
+            {
+                installStatus = InstallStatus.Failed;
+                Shell.WriteError($"Exception running install step {Name}:\n{ex}");
+            }
+            Shell.WriteDebug($"Finished installing {Name}, now checking if install was successful.");
+            Recheck();
+
             if (previousStatus == InstallStatus.NotInstalled)
             {
-                if (Recheck() != InstallStatus.Installed)
+                if (InstallStatus != InstallStatus.Installed)
                 {
                     Shell.WriteError($"{Name} did not seem to install successfully.");
                     installStatus = InstallStatus.Failed;
@@ -81,6 +103,7 @@ record Step(
                 else
                 {
                     Shell.WriteSuccess($"{Name} installed successfully!\n");
+                    Step.CompletedSteps.Add(this);
                 }
             }
             else
