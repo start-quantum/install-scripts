@@ -1,5 +1,41 @@
 ﻿using StartQuantum;
 
+// DISTRIBUTION CHECK ////////////////////////////////////////////////////////
+
+if (OperatingSystem.IsLinux())
+{
+    // Check that we're on Ubuntu, otherwise raise a message and ask the
+    // user if they want to proceed.
+    var release = Shell.Capture("lsb_release", "--id", "--short").Trim();
+    if (release != "Ubuntu")
+    {
+        Shell.WriteWarning(
+            $"It looks like you're using {release} as your Linux distribution, but this tool is currently only tested on Ubuntu."
+        );
+        if (!Shell.Prompt("Run installer anyway?", defaultResponse: false))
+        {
+            Environment.Exit(1);
+        }
+    }
+    else
+    {
+        // Check the version is at least 20.04.
+        var version = Version.Parse(Shell.Capture("lsb_release", "--release", "--short").Trim());
+        // FIXME: Currently always fails, saying 20.04 < 20.4.
+        if (version <= new Version(20, 04))
+        {
+            Shell.WriteWarning(
+                $"It looks like you're using Ubuntu {version} as your Linux distribution, but this tool is currently only tested on Ubuntu 20.04."
+            );
+            if (!Shell.Prompt("Run installer anyway?", defaultResponse: false))
+            {
+                Environment.Exit(1);
+            }
+        }
+    }
+}
+
+
 // CONDA /////////////////////////////////////////////////////////////////////
 
 var conda = new Step(
@@ -18,6 +54,23 @@ var conda = new Step(
                 condaInstaller,
                 "/InstallationType=JustMe /S"
             ).WaitForExit();
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            var condaInstaller = Download.File(
+                "https://repo.anaconda.com/archive/Anaconda3-2021.05-Linux-x86_64.sh",
+                "Anaconda3-2021.05-Linux-x86_64.sh"
+            ).Result;
+            Shell.WriteLineInColor("Installing conda, please wait...", ConsoleColor.White);
+            var anacondaPath = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "anaconda");
+            Shell.Bash(new[]
+            {
+                $"bash {condaInstaller} -b -p {anacondaPath}"
+            })?.WaitForExit();
+            Shell.InlineBashScript($@"
+                eval ""$({Path.Join(anacondaPath, "bin", "conda")} shell.bash hook)"";
+                conda init;
+            ")?.WaitForExit();
         }
         else
         {
@@ -45,7 +98,7 @@ conda.Run();
 
 new Step(
     "Conda command-line support",
-    "Configures conda for use with common command line shells, including bash and PowerShell.",
+    "Configures conda for use with all common command line shells, including bash and PowerShell.",
     () =>
     {
         if (Conda.TryFind(out var path))
@@ -262,7 +315,8 @@ new Step(
     DependsOn: new() { vscode }
 ).Run();
 
-System.Console.WriteLine("Installation completed! The following installation steps were performed:");
+Shell.WriteSuccess("Installation completed! The following installation steps were performed:");
+Shell.WriteInfo("NOTE: Some changes may not be available until you start a new terminal.");
 foreach (var step in Step.CompletedSteps)
 {
     System.Console.WriteLine($"- {step.Name}");
